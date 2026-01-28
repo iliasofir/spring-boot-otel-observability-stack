@@ -13,41 +13,6 @@ A production-ready Spring Boot application demonstrating comprehensive observabi
 
 ### System Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          Spring Boot Application                         │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │  Controllers → Services (OrderService, PaymentService)          │   │
-│  │  OpenTelemetry Java Agent (auto-instrumentation)                │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-│         │                    │                       │                   │
-│         │ Metrics            │ Traces                │ Logs              │
-│         │ (HTTP)             │ (OTLP/gRPC)           │ (stdout)          │
-└─────────┼────────────────────┼───────────────────────┼───────────────────┘
-          │                    │                       │
-          ▼                    ▼                       ▼
-   ┌─────────────┐      ┌──────────┐          ┌──────────────┐
-   │ Prometheus  │      │  Tempo   │          │   Promtail   │
-   │  (Metrics)  │      │ (Traces) │          │ (Log Shipper)│
-   └─────────────┘      └──────────┘          └──────────────┘
-          │                    │                       │
-          │                    │                       ▼
-          │                    │               ┌──────────────┐
-          │                    │               │     Loki     │
-          │                    │               │    (Logs)    │
-          │                    │               └──────────────┘
-          │                    │                       │
-          └────────────────────┴───────────────────────┘
-                               │
-                               ▼
-                      ┌─────────────────┐
-                      │    Grafana      │
-                      │  (Dashboards)   │
-                      │  • SLO Metrics  │
-                      │  • Trace View   │
-                      │  • Log Explorer │
-                      └─────────────────┘
-```
 
 ![Architecture Diagram](screenshots/Architecture.png)
 
