@@ -1,23 +1,136 @@
 # Spring Boot OpenTelemetry Observability Lab
 
+## Case Study: Building Production-Grade Observability from Scratch
+
 [![Metrics](https://img.shields.io/badge/Metrics-Prometheus-green)](http://localhost:9090)
 [![Traces](https://img.shields.io/badge/Traces-Tempo-blue)](http://localhost:3200)
 [![Logs](https://img.shields.io/badge/Logs-Loki-orange)](http://localhost:3100)
 [![Dashboards](https://img.shields.io/badge/Grafana-Dashboards-purple)](http://localhost:3000)
 
-A production-ready Spring Boot application demonstrating comprehensive observability using OpenTelemetry Java Agent, Prometheus, Tempo, and Grafana.
+A production-ready Spring Boot application demonstrating comprehensive observability using OpenTelemetry Java Agent, Prometheus, Tempo, Loki, and Grafana. This case study shows how to implement the **three pillars of observability** (metrics, traces, and logs) with **SLO monitoring** in a modern microservices environment.
 
 ## Architecture
 
-This project implements a modern observability stack with:
+### System Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Spring Boot Application                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  Controllers → Services (OrderService, PaymentService)          │   │
+│  │  OpenTelemetry Java Agent (auto-instrumentation)                │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│         │                    │                       │                   │
+│         │ Metrics            │ Traces                │ Logs              │
+│         │ (HTTP)             │ (OTLP/gRPC)           │ (stdout)          │
+└─────────┼────────────────────┼───────────────────────┼───────────────────┘
+          │                    │                       │
+          ▼                    ▼                       ▼
+   ┌─────────────┐      ┌──────────┐          ┌──────────────┐
+   │ Prometheus  │      │  Tempo   │          │   Promtail   │
+   │  (Metrics)  │      │ (Traces) │          │ (Log Shipper)│
+   └─────────────┘      └──────────┘          └──────────────┘
+          │                    │                       │
+          │                    │                       ▼
+          │                    │               ┌──────────────┐
+          │                    │               │     Loki     │
+          │                    │               │    (Logs)    │
+          │                    │               └──────────────┘
+          │                    │                       │
+          └────────────────────┴───────────────────────┘
+                               │
+                               ▼
+                      ┌─────────────────┐
+                      │    Grafana      │
+                      │  (Dashboards)   │
+                      │  • SLO Metrics  │
+                      │  • Trace View   │
+                      │  • Log Explorer │
+                      └─────────────────┘
+```
+
+![Architecture Diagram](screenshots/Architecture.png)
+
+### Key Components
 
 - **Distributed Tracing**: OpenTelemetry Java Agent → Tempo (automatic, zero-code instrumentation)
-- **Metrics**: Micrometer + Prometheus (custom business metrics)
-- **Visualization**: Grafana (unified dashboard for traces and metrics)
+- **Metrics**: Micrometer + Prometheus (custom business metrics + auto-instrumentation)
+- **Centralized Logging**: Container logs → Promtail → Loki
+- **Unified Visualization**: Grafana (single pane of glass for all observability data)
+- **SLO Monitoring**: PromQL-based SLOs tracking success rate and P95 latency
 
 ### Key Feature: Zero-Code Observability
 
 This project demonstrates **production-ready observability without modifying application code**. The OpenTelemetry Java Agent automatically instruments all HTTP requests, service calls, and exceptions—no manual span creation needed.
+
+## What You'll Learn
+
+This case study teaches you how to implement comprehensive observability in a Spring Boot application:
+
+### 1. **Spring Boot + OpenTelemetry Java Agent**
+
+- Automatic instrumentation without code changes using the OpenTelemetry Java Agent
+- Attaching the agent via Docker `-javaagent` flag
+- Configuring telemetry export through environment variables (`OTEL_*`)
+- Understanding what gets traced automatically (HTTP, databases, frameworks)
+
+### 2. **Metrics: Prometheus Scraping**
+
+- Exposing Spring Boot Actuator metrics at `/actuator/prometheus`
+- Configuring Prometheus to scrape application endpoints
+- Creating custom business metrics using Micrometer (e.g., `payments.processed`)
+- Writing PromQL queries for RED metrics (Rate, Errors, Duration)
+
+### 3. **Traces: OTLP → Tempo**
+
+- Exporting traces using the OpenTelemetry Protocol (OTLP) over HTTP
+- Configuring Tempo as a trace backend
+- Understanding distributed tracing across service boundaries
+- Correlating traces with metrics for root cause analysis
+
+### 4. **Logs: Container Logs via Promtail → Loki**
+
+- Shipping container stdout/stderr logs using Promtail
+- Storing and querying logs in Loki (Prometheus-like log aggregation)
+- Correlating logs with traces using trace IDs
+- Building log queries with LogQL
+
+### 5. **SLOs: HTTP Success Rate & P95 Latency**
+
+- Defining Service Level Objectives using PromQL
+- Calculating HTTP success rate: `rate(http_server_requests_seconds_count{status=~"2.."}[5m])`
+- Measuring P95 latency: `histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m]))`
+- Visualizing SLO compliance in Grafana dashboards
+- Setting up alerts when SLOs are breached
+
+### 6. **Unified Observability in Grafana**
+
+- Creating dashboards that combine metrics, traces, and logs
+- Using data source correlation to jump from metrics to traces to logs
+- Building SLO dashboards with burn rate alerts
+- Implementing trace-to-logs and logs-to-traces navigation
+
+## Screenshots
+
+### Metrics Dashboard
+
+![Prometheus Metrics](screenshots/metrics.png)
+_HTTP request rates, latency percentiles, and JVM metrics_
+
+### Distributed Traces
+
+![Tempo Traces](screenshots/traces.png)
+_End-to-end trace showing service call hierarchy and timing_
+
+### Centralized Logs
+
+![Loki Logs](screenshots/logs.png)
+_Structured logs with trace correlation and filtering_
+
+### SLO Dashboard
+
+![SLO Monitoring](screenshots/slo.png)
+_Real-time SLO tracking with success rate and latency targets_
 
 ## How the OpenTelemetry Java Agent Works
 
@@ -399,6 +512,17 @@ docker-compose down -v
 - [Prometheus](https://prometheus.io/docs/introduction/overview/)
 - [OTLP Protocol](https://opentelemetry.io/docs/specs/otlp/)
 
+## Case Study Conclusion
+
+This project demonstrates how to build a production-grade observability stack from scratch using modern open-source tools. By combining automatic instrumentation (OpenTelemetry Java Agent), industry-standard backends (Prometheus, Tempo, Loki), and powerful visualization (Grafana), you can achieve comprehensive observability without significant code changes.
+
+**Key Takeaways:**
+
+- ✅ Zero-code instrumentation reduces maintenance burden
+- ✅ Unified observability (metrics + traces + logs) accelerates debugging
+- ✅ SLO-based monitoring focuses on user experience
+- ✅ Docker Compose makes the entire stack reproducible
+
 ## License
 
-This project is for educational purposes.
+This project is for educational purposes and serves as a case study for implementing observability best practices.
