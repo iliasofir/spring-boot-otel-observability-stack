@@ -1,0 +1,17 @@
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+- job_name: spring-app
+  static_configs:
+  - targets: [localhost]
+    labels:
+      job: containers
+      app: spring-otel-observability-lab
+      __path__: /var/lib/docker/containers/20ba589beca084f97ca15011afa59ef2c659cee7eb544869ceeb557b2394163a/20ba589beca084f97ca15011afa59ef2c659cee7eb544869ceeb557b2394163a-json.log
