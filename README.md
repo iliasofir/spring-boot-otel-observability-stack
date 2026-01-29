@@ -94,7 +94,7 @@ _Structured logs with trace correlation and filtering_
 
 ### SLO Dashboard
 
-![SLO Monitoring](screenshots/slo.png)
+![SLO Monitoring](screenshots/SLO.png)
 _Real-time SLO tracking with success rate and latency targets_
 
 ## How the OpenTelemetry Java Agent Works
